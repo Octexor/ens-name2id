@@ -179,7 +179,7 @@ export const App = () => {
       generate();
       setRefresh(false);
     }
-  }, [refresh])
+  }, [refresh, generate])
 
   return (
     <ChakraProvider theme={theme}>
