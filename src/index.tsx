@@ -6,7 +6,7 @@ import reportWebVitals from "./reportWebVitals"
 import * as serviceWorker from "./serviceWorker"
 
 const container = document.getElementById("root")
-const root = ReactDOM.createRoot(container)
+const root = ReactDOM.createRoot(container as Element)
 
 root.render(
   <React.StrictMode>
