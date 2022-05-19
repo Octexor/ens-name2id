@@ -8,7 +8,6 @@ import {
   Code,
   Grid,
   Textarea,
-  theme,
   Heading,
   HStack,
   Button,
@@ -22,12 +21,13 @@ import {
   AlertIcon,
   Container,
 } from "@chakra-ui/react"
+import theme from "./theme";
+import { ChevronDownIcon } from "@chakra-ui/icons"
 import ReactJson from 'react-json-view'
 import exportFromJSON from 'export-from-json'
+import writeXlsxFile from 'write-excel-file'
 import getTokenId, {normalize} from "./helpers/name2id";
 import parseInput from "./helpers/parse-input";
-import { ChevronDownIcon } from "@chakra-ui/icons"
-import writeXlsxFile from 'write-excel-file'
 
 interface Name2IdMap {
   [index: string]: string;
