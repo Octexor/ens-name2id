@@ -247,7 +247,7 @@ export const App = () => {
         spacing={4}
         justify='center'
         align='center'>
-        <Text fontSize="md">Built by <Link color="teal.500" href="https://twitter.com/Octexor">@Octexor</Link></Text>
+        <Text fontSize="md">Built by <Link color="teal.500" href="https://twitter.com/Octexor" target="_blank">@Octexor</Link></Text>
       </Container>
     </Box>
       </Box>
