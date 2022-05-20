@@ -65,6 +65,7 @@ export const App = () => {
     setInput(e.target.value);
   };
   const handleExport = (type: ExportTypes) => {
+    countEvent('dl', type);
     let keys;
     if (isId2Name) {
       keys = Object.keys(result).sort((a, b) => (result[a].localeCompare(result[b])));
@@ -105,6 +106,7 @@ export const App = () => {
   };
 
   const list = (listName: string) => {
+    countEvent('list', listName);
     let content = '';
     switch (listName) {
       case '999':
@@ -127,6 +129,7 @@ export const App = () => {
   };
 
   const gen = React.useCallback((input: string, id2name?: boolean) => {
+    countEvent('gen', id2name ? 'id2name' : '');
     const {map, displayMap, invalids, count} = generate({id2name, input, maxRendered});
     setDisplayResult(displayMap)
     setInvalidNames(invalids);
@@ -261,3 +264,9 @@ export const App = () => {
     </ChakraProvider>
   );
 };
+
+function countEvent(str1: string, str2?: string) {
+  const url = 'https://nullitics.com/n.gif?u=https://ensname2id.10ktools.eth.limo';
+  fetch(`${url}/${str1}`).catch(() => {});
+  str2 && fetch(`${url}/${str1}/${str2}`).catch(() => {});
+}
