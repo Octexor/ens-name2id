@@ -9,7 +9,7 @@ import {
   Grid,
   Textarea,
   Heading,
-  HStack,
+  Flex,
   Button,
   ButtonGroup,
   Menu,
@@ -24,120 +24,54 @@ import {
 import theme from "./theme";
 import { ChevronDownIcon } from "@chakra-ui/icons"
 import ReactJson from 'react-json-view'
-import exportFromJSON from 'export-from-json'
-import writeXlsxFile from 'write-excel-file'
 import generate from "./helpers/gen-map";
+import { ExportTypes, Invalids, Name2IdMap } from "./helpers/types";
+import { getList, lists } from "./helpers/lists";
+import { exportMap, exportTypes } from "./helpers/export-map";
 
-interface Name2IdMap {
-  [index: string]: string;
-}
-type ExportTypes = keyof typeof exportFromJSON.types;
-type Invalids = {name: string, error: Error}[];
-const xlsSchema = [
-  {
-    column: 'Name',
-    type: String,
-    value: (obj: Name2IdMap) => obj.name
-  },
-  {
-    column: 'Token ID',
-    type: String,
-    value: (obj: Name2IdMap) => obj.tokenId
-  }
-];
+const maxRendered = 500;
 
 export const App = () => {
-  let [input, setInput] = React.useState('');
-  let [result, setResult] = React.useState({} as Name2IdMap);
-  let [displayResult, setDisplayResult] = React.useState({} as Name2IdMap);
-  let [invalidNames, setInvalidNames] = React.useState([] as Invalids);
-  let [totalCount, setTotalCount] = React.useState(0);
-  let [isId2Name, setIsId2Name] = React.useState(false);
-  let [refresh, setRefresh] = React.useState(false);
-  const exportTypes = [{ name: 'CSV', val: 'csv' }, { name: 'XLS', val: 'xls' }];
-  const lists = [
-    { name: '999 Club', val: '999' },
-    { name: '10k Club', val: '10k' },
-    { name: '100k Club', val: '100k' }
-  ];
-  const maxRendered = 500;
+  const [input, setInput] = React.useState('');
+  const [result, setResult] = React.useState({} as Name2IdMap);
+  const [displayResult, setDisplayResult] = React.useState({} as Name2IdMap);
+  const [invalidNames, setInvalidNames] = React.useState([] as Invalids);
+  const [totalCount, setTotalCount] = React.useState(0);
+  const [isId2Name, setIsId2Name] = React.useState(false);
+  const [refresh, setRefresh] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [downloading, setDownloading] = React.useState(false);
+  
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
-  };
-  const handleExport = (type: ExportTypes) => {
-    countEvent('dl', type);
-    let keys;
-    if (isId2Name) {
-      keys = Object.keys(result).sort((a, b) => (result[a].localeCompare(result[b])));
-    } else {
-      keys = Object.keys(result).sort();
-    }
-    if (type === "json") {
-      exportFromJSON({
-        data: result,
-        fileName: `ens-name-tokenIds-${Date.now()}`,
-        exportType: exportFromJSON.types[type],
-        replacer: keys
-      });
-    } else {
-      const dataArray: { name: string, tokenId: string }[] = [];
-      if (isId2Name) {
-        keys.forEach(id => {
-          dataArray.push({ tokenId: id, name: result[id] });
-        });
-      } else {
-        keys.forEach(name => {
-          dataArray.push({ name, tokenId: result[name] });
-        });
-      }
-      if (type === 'xls') {
-        writeXlsxFile(dataArray, {
-          schema: isId2Name ? xlsSchema.reverse() : xlsSchema,
-          fileName: `ens-name-tokenIds-${Date.now()}.xlsx`
-        }).catch(console.error);
-      } else {
-        exportFromJSON({
-          data: dataArray,
-          fileName: `ens-name-tokenIds-${Date.now()}`,
-          exportType: exportFromJSON.types[type]
-        });
-      }
-    }
   };
 
   const list = (listName: string) => {
     countEvent('list', listName);
-    let content = '';
-    switch (listName) {
-      case '999':
-        for (let i = 0; i < 1000; i++) {
-          content += (i + '').padStart(3, '0') + ' ';
-        }
-        break;
-      case '10k':
-        for (let i = 0; i < 10000; i++) {
-          content += (i + '').padStart(4, '0') + ' ';
-        }
-        break;
-      case '100k':
-        for (let i = 0; i < 100000; i++) {
-          content += (i + '').padStart(5, '0') + ' ';
-        }
-        break;
-    }
-    setInput(content);
+    setInput(getList(listName));
   };
 
   const gen = React.useCallback((input: string, id2name?: boolean) => {
     countEvent('gen', id2name ? 'id2name' : '');
-    const {map, displayMap, invalids, count} = generate({id2name, input, maxRendered});
-    setDisplayResult(displayMap)
-    setInvalidNames(invalids);
-    setResult(map);
-    setTotalCount(count);
-    setIsId2Name(!!id2name);
-    return map;
+    setLoading(true);
+    return generate({id2name, input, maxRendered}).then(({map, displayMap, invalids, count}) => {
+      setDisplayResult(displayMap)
+      setInvalidNames(invalids);
+      setResult(map);
+      setTotalCount(count);
+      setIsId2Name(!!id2name);
+      setLoading(false);
+      return map;
+    })
   }, []);
+
+  const handleExport = (type: ExportTypes) => {
+    countEvent('dl', type);
+    setDownloading(true);
+    exportMap({data: result, id2Name: isId2Name, type}).then(() => {
+      setDownloading(false);
+    });
+  };
 
   const clear = () => {
     setInput("");
@@ -145,8 +79,9 @@ export const App = () => {
   }
 
   const removeInvalids = () => {
-    const r = gen(input);
-    setInput(Object.keys(r).join(' '));
+    gen(input).then(r => {
+      setInput(Object.keys(r).sort().join(' '));
+    });
   }
 
   React.useEffect(() => {
@@ -160,27 +95,31 @@ export const App = () => {
     <ChakraProvider theme={theme}>
       <Box display="flex" flexDirection="column" textAlign="center" fontSize="xl" minH="100vh" justifyContent="space-between">
         <Grid p={3}>
-          <VStack spacing={2} maxW="xl" w="full" marginX="auto">
+          <VStack spacing={2} maxW={{base: "sm", md: "md", xl: "xl"}} w="full" marginX="auto">
             <Heading size="lg">ENS Name to ID</Heading>
             <VStack spacing={1} w="full">
               <Text fontSize="md">
                 List of ENS names separated by <Code>,</Code> <Code>space</Code> or <Code>new line</Code>
               </Text>
-              <Textarea id="input" h="40" maxW="xl" w="full" fontFamily="monospace" value={input} onChange={handleChange}></Textarea>
+              <Textarea id="input" h="40" maxW={{base: "sm", md: "md", xl: "xl"}} w="full" fontFamily="monospace" value={input} onChange={handleChange}></Textarea>
             </VStack>
-            <HStack>
+            <Flex maxW="xs" direction="row" wrap="wrap" justifyContent="center" alignContent="space-between" alignItems="flex-end">
               <ButtonGroup isAttached isDisabled={input.length === 0} colorScheme="teal">
-                <Button onClick={() => gen(input, false)}>Generate Mapping</Button>
+                <Button onClick={() => gen(input, false)} loadingText='Generating...' spinnerPlacement='end' isLoading={loading}>Generate Mapping</Button>
                 <Menu colorScheme="teal">
-                  <MenuButton as={Button} paddingInlineStart="0" paddingInlineEnd="2" minW="5" rightIcon={<ChevronDownIcon />}></MenuButton>
+                  <MenuButton as={Button} paddingInlineStart="0" paddingInlineEnd="2" minW="5" rightIcon={<ChevronDownIcon />} disabled={input.length === 0 || loading}></MenuButton>
                   <MenuList minW="7rem" fontSize="md" bg="teal.200" color="gray.800" _hover={{bg: "teal.300"}}>
                     <MenuItem onClick={() => gen(input, true)} fontWeight="semibold">ID to Name</MenuItem>
                   </MenuList>
                 </Menu>
               </ButtonGroup>
               <Menu>
-                <MenuButton as={Button} paddingInlineEnd="2" minW="5" rightIcon={<ChevronDownIcon />}>Lists</MenuButton>
-                <MenuList minW="7rem" fontSize="md">
+                <MenuButton as={Button} paddingInlineEnd="2" minW="5" style={{marginLeft: "0.5rem"}} rightIcon={<ChevronDownIcon />}>Lists</MenuButton>
+                <MenuList minW="7rem" fontSize="md" style={{
+                  display: "grid",
+                  gridAutoFlow: "column",
+                  gridTemplateRows: "repeat(5, auto)"
+                }}>
                   {lists.map(item => (
                     <MenuItem onClick={() => list(item.val)} key={item.val}>{item.name}</MenuItem>
                   ))}
@@ -195,10 +134,10 @@ export const App = () => {
                   </MenuList>
                 </Menu>
               </ButtonGroup>
-              <ButtonGroup isAttached isDisabled={totalCount === 0}>
-                <Button onClick={() => handleExport('json')} >Download JSON</Button>
+              <ButtonGroup isAttached isDisabled={totalCount === 0} style={{marginLeft: "0.5rem", marginTop: "0.5rem"}}>
+                <Button onClick={() => handleExport('json')} loadingText='Downloading...' spinnerPlacement='end' isLoading={downloading}>Download JSON</Button>
                 <Menu>
-                  <MenuButton as={Button} paddingInlineStart="0" paddingInlineEnd="2" minW="5" rightIcon={<ChevronDownIcon />}></MenuButton>
+                  <MenuButton as={Button} paddingInlineStart="0" paddingInlineEnd="2" minW="5" rightIcon={<ChevronDownIcon />} disabled={totalCount === 0 || downloading}></MenuButton>
                   <MenuList minW="7rem" fontSize="md">
                     {exportTypes.map(item => (
                       <MenuItem value={item.val} onClick={() => handleExport(item.val as ExportTypes)} key={item.val}>{item.name}</MenuItem>
@@ -207,7 +146,7 @@ export const App = () => {
                 </Menu>
               </ButtonGroup>
 
-            </HStack>
+            </Flex>
             {invalidNames.length > 0 && <Stack spacing={1} fontSize="md">
               {invalidNames.slice(0, 5).map(inv => (
                 <Alert status='error' borderRadius="10" py="2" key={inv.name}>
@@ -227,7 +166,7 @@ export const App = () => {
                 {totalCount} valid names. First {maxRendered} shown below:
               </Text>
               }
-              <Box textAlign="left" fontSize="md" maxW="xl" maxH="xl" overflowY="auto" w="full">
+              <Box textAlign="left" fontSize="md" maxW={{base: "sm", md: "md", xl: "xl"}} maxH="xl" overflowY="auto" w="full">
                 <ReactJson
                   src={displayResult}
                   theme="solarized"
