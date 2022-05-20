@@ -26,13 +26,13 @@ import { ChevronDownIcon } from "@chakra-ui/icons"
 import ReactJson from 'react-json-view'
 import exportFromJSON from 'export-from-json'
 import writeXlsxFile from 'write-excel-file'
-import getTokenId, { normalize } from "./helpers/name2id";
-import parseInput from "./helpers/parse-input";
+import generate from "./helpers/gen-map";
 
 interface Name2IdMap {
   [index: string]: string;
 }
 type ExportTypes = keyof typeof exportFromJSON.types;
+type Invalids = {name: string, error: Error}[];
 const xlsSchema = [
   {
     column: 'Name',
@@ -44,14 +44,13 @@ const xlsSchema = [
     type: String,
     value: (obj: Name2IdMap) => obj.tokenId
   }
-]
+];
 
 export const App = () => {
-
   let [input, setInput] = React.useState('');
   let [result, setResult] = React.useState({} as Name2IdMap);
   let [displayResult, setDisplayResult] = React.useState({} as Name2IdMap);
-  let [invalidNames, setInvalidNames] = React.useState([] as string[]);
+  let [invalidNames, setInvalidNames] = React.useState([] as Invalids);
   let [totalCount, setTotalCount] = React.useState(0);
   let [isId2Name, setIsId2Name] = React.useState(false);
   let [refresh, setRefresh] = React.useState(false);
@@ -127,42 +126,15 @@ export const App = () => {
     setInput(content);
   };
 
-  const generate = (id2name?: boolean) => {
-    const map: Name2IdMap = {};
-    const displayMap: Name2IdMap = {};
-    let count = 0;
-    const names = parseInput(input);
-    const invalids: string[] = [];
-    setIsId2Name(!!id2name);
-    names.forEach(name => {
-      if (name.length === 0) return;
-      let normal;
-      try {
-        normal = normalize(name);
-        let tokenId = getTokenId(normal);
-        if (id2name) {
-          map[tokenId] = name;
-        } else {
-          map[name] = tokenId;
-        }
-        count++;
-        if (count <= maxRendered) {
-          if (id2name) {
-            displayMap[tokenId] = map[tokenId];
-          } else {
-            displayMap[name] = map[name];
-          }
-        }
-      } catch (e) {
-        invalids.push(name);
-      }
-    });
+  const gen = React.useCallback((input: string, id2name?: boolean) => {
+    const {map, displayMap, invalids, count} = generate({id2name, input, maxRendered});
     setDisplayResult(displayMap)
     setInvalidNames(invalids);
     setResult(map);
     setTotalCount(count);
+    setIsId2Name(!!id2name);
     return map;
-  };
+  }, []);
 
   const clear = () => {
     setInput("");
@@ -170,16 +142,16 @@ export const App = () => {
   }
 
   const removeInvalids = () => {
-    const r = generate();
+    const r = gen(input);
     setInput(Object.keys(r).join(' '));
   }
 
   React.useEffect(() => {
     if (refresh) {
-      generate();
+      gen(input);
       setRefresh(false);
     }
-  }, [refresh, generate])
+  }, [input, refresh, gen])
 
   return (
     <ChakraProvider theme={theme}>
@@ -191,15 +163,15 @@ export const App = () => {
               <Text fontSize="md">
                 List of ENS names separated by <Code>,</Code> <Code>space</Code> or <Code>new line</Code>
               </Text>
-              <Textarea id="input" h="40" maxW="xl" w="full" value={input} onChange={handleChange}></Textarea>
+              <Textarea id="input" h="40" maxW="xl" w="full" fontFamily="monospace" value={input} onChange={handleChange}></Textarea>
             </VStack>
             <HStack>
-              <ButtonGroup isAttached>
-                <Button onClick={() => generate(false)}>Generate Mapping</Button>
-                <Menu>
+              <ButtonGroup isAttached isDisabled={input.length === 0} colorScheme="teal">
+                <Button onClick={() => gen(input, false)}>Generate Mapping</Button>
+                <Menu colorScheme="teal">
                   <MenuButton as={Button} paddingInlineStart="0" paddingInlineEnd="2" minW="5" rightIcon={<ChevronDownIcon />}></MenuButton>
-                  <MenuList minW="7rem" fontSize="md">
-                    <MenuItem onClick={() => generate(true)}>ID to Name</MenuItem>
+                  <MenuList minW="7rem" fontSize="md" bg="teal.200" color="gray.800" _hover={{bg: "teal.300"}}>
+                    <MenuItem onClick={() => gen(input, true)} fontWeight="semibold">ID to Name</MenuItem>
                   </MenuList>
                 </Menu>
               </ButtonGroup>
@@ -220,7 +192,7 @@ export const App = () => {
                   </MenuList>
                 </Menu>
               </ButtonGroup>
-              <ButtonGroup isAttached>
+              <ButtonGroup isAttached isDisabled={totalCount === 0}>
                 <Button onClick={() => handleExport('json')} >Download JSON</Button>
                 <Menu>
                   <MenuButton as={Button} paddingInlineStart="0" paddingInlineEnd="2" minW="5" rightIcon={<ChevronDownIcon />}></MenuButton>
@@ -234,10 +206,10 @@ export const App = () => {
 
             </HStack>
             {invalidNames.length > 0 && <Stack spacing={1} fontSize="md">
-              {invalidNames.slice(0, 5).map(name => (
-                <Alert status='error' borderRadius="10" py="2">
+              {invalidNames.slice(0, 5).map(inv => (
+                <Alert status='error' borderRadius="10" py="2" key={inv.name}>
                   <AlertIcon />
-                  Invalid name: {name}
+                  Invalid name: "{inv.name}" error: {inv.error.message} 
                 </Alert>
               ))}
               {invalidNames.length > 5 && <Alert status='error' borderRadius="10" py="2">
