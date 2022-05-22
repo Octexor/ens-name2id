@@ -4,7 +4,7 @@ const parseInput = (str: string) => {
     delimeters.forEach(d => {
         parsedStr = parsedStr.replace(d, '\n');
     });
-    return parsedStr.trim().split('\n').map(n => n.trim());
+    return parsedStr.trim().split('\n').map(n => n.trim()).filter(n => n.length > 0);
 };
 
 export default parseInput;

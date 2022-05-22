@@ -51,18 +51,17 @@ export const App = () => {
     setInput(getList(listName));
   };
 
-  const gen = React.useCallback((input: string, id2name?: boolean) => {
+  const gen = React.useCallback(async (input: string, id2name?: boolean) => {
     countEvent('gen', id2name ? 'id2name' : '');
     setLoading(true);
-    return generate({id2name, input, maxRendered}).then(({map, displayMap, invalids, count}) => {
-      setDisplayResult(displayMap)
-      setInvalidNames(invalids);
-      setResult(map);
-      setTotalCount(count);
-      setIsId2Name(!!id2name);
-      setLoading(false);
-      return map;
-    })
+    const { map, displayMap, invalids, count } = await generate({ id2name, input, maxRendered });
+    setDisplayResult(displayMap);
+    setInvalidNames(invalids);
+    setResult(map);
+    setTotalCount(count);
+    setIsId2Name(!!id2name);
+    setLoading(false);
+    return map;
   }, []);
 
   const handleExport = (type: ExportTypes) => {

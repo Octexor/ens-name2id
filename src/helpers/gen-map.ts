@@ -19,7 +19,6 @@ const generate = ({ id2name, input, maxRendered }: { id2name?: boolean, input: s
                     await new Promise<void>((rs) => {
                         setTimeout(() => {
                             chunk.forEach(name => {
-                                if (name.length === 0) return;
                                 let normal: string;
                                 try {
                                     normal = normalize(ens_normalize(name));
