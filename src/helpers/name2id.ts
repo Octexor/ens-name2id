@@ -1,4 +1,5 @@
 const normalize = require('@ensdomains/eth-ens-namehash').normalize;
+const validate = require('@ensdomains/ens-validation').validate;
 const ethers = require('ethers');
 const BigNumber = ethers.BigNumber;
 const utils = ethers.utils;
@@ -8,5 +9,5 @@ const getTokenId = (name: string) => {
     return BigNumber.from(labelHash).toString();
 }
 
-export {normalize};
+export {normalize, validate};
 export default getTokenId;
