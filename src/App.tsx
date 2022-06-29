@@ -41,6 +41,7 @@ export const App = () => {
   const [refresh, setRefresh] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [downloading, setDownloading] = React.useState(false);
+  const [loadingList, setLoadingList] = React.useState(false);
   
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
@@ -48,7 +49,13 @@ export const App = () => {
 
   const list = (listName: string) => {
     countEvent('list', listName);
-    setInput(getList(listName));
+    setTotalCount(0);
+    setDisplayResult({});
+    setLoadingList(true);
+    getList(listName).then((content: string) => {
+      setInput(content);
+      setLoadingList(false);
+    });
   };
 
   const gen = React.useCallback(async (input: string, id2name?: boolean) => {
@@ -113,11 +120,11 @@ export const App = () => {
                 </Menu>
               </ButtonGroup>
               <Menu>
-                <MenuButton as={Button} paddingInlineEnd="2" minW="5" style={{marginLeft: "0.5rem"}} rightIcon={<ChevronDownIcon />}>Lists</MenuButton>
+                <MenuButton as={Button} loadingText='Listing...' spinnerPlacement='end' isLoading={loadingList} paddingInlineEnd="2" minW="5" style={{marginLeft: "0.5rem"}} rightIcon={<ChevronDownIcon />}>Lists</MenuButton>
                 <MenuList minW="7rem" fontSize="md" style={{
                   display: "grid",
                   gridAutoFlow: "column",
-                  gridTemplateRows: "repeat(5, auto)"
+                  gridTemplateRows: "repeat(8, auto)"
                 }}>
                   {lists.map(item => (
                     <MenuItem onClick={() => list(item.val)} key={item.val}>{item.name}</MenuItem>
