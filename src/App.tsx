@@ -171,10 +171,9 @@ export const App = () => {
             </Stack>
             }
             {totalCount > 0 && <VStack spacing={1} w="full">
-              {totalCount > maxRendered && <Text fontSize="md">
-                {duplicates ? `${duplicates} duplicate${duplicates > 1 ? 's' : ''}. ` : ''}{totalCount} valid names. First {maxRendered} shown below:
+              <Text fontSize="md">
+                {duplicates ? `${duplicates} duplicate${duplicates > 1 ? 's' : ''}. ` : ''}{totalCount} valid names.{totalCount > maxRendered ? ` First ${maxRendered} shown below:` : ''}
               </Text>
-              }
               <Box textAlign="left" fontSize="md" maxW={{base: "sm", md: "md", xl: "xl"}} maxH="xl" overflowY="auto" w="full">
                 <ReactJson
                   src={displayResult}
