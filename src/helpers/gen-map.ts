@@ -4,11 +4,12 @@ import parseInput from "./parse-input";
 import { Invalids, Name2IdMap } from "./types";
 
 const chunkSize = 1000;
-const generate = ({ id2name, input, maxRendered }: { id2name?: boolean, input: string, maxRendered: number }): Promise<{ map: Name2IdMap, displayMap: Name2IdMap, invalids: Invalids, count: number }> => {
+const generate = ({ id2name, input, maxRendered }: { id2name?: boolean, input: string, maxRendered: number }): Promise<{ map: Name2IdMap, displayMap: Name2IdMap, invalids: Invalids, count: number, duplicates: number }> => {
     return new Promise((resolve) => {
             const map: Name2IdMap = {};
             const displayMap: Name2IdMap = {};
             let count = 0;
+            let duplicates = 0;
             const names = parseInput(input);
             const invalids: Invalids = [];
             
@@ -30,11 +31,21 @@ const generate = ({ id2name, input, maxRendered }: { id2name?: boolean, input: s
                                     }
                                     let tokenId = getTokenId(normal);
                                     if (id2name) {
+                                        if(map[tokenId]){
+                                            duplicates++;
+                                        } else {
+                                            count++;
+                                        }
                                         map[tokenId] = normal;
                                     } else {
+                                        if(map[normal]){
+                                            duplicates++;
+                                        } else {
+                                            count++;
+                                        }
                                         map[normal] = tokenId;
                                     }
-                                    count++;
+                                    
                                     if (count <= maxRendered) {
                                         if (id2name) {
                                             displayMap[tokenId] = map[tokenId];
@@ -52,7 +63,7 @@ const generate = ({ id2name, input, maxRendered }: { id2name?: boolean, input: s
                 }
             }
             run().then(() => {
-                resolve({ map, displayMap, invalids, count });
+                resolve({ map, displayMap, invalids, count, duplicates });
             });
             
     });

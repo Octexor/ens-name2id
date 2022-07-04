@@ -37,6 +37,7 @@ export const App = () => {
   const [displayResult, setDisplayResult] = React.useState({} as Name2IdMap);
   const [invalidNames, setInvalidNames] = React.useState([] as Invalids);
   const [totalCount, setTotalCount] = React.useState(0);
+  const [duplicates, setDuplicates] = React.useState(0);
   const [isId2Name, setIsId2Name] = React.useState(false);
   const [refresh, setRefresh] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
@@ -50,6 +51,7 @@ export const App = () => {
   const list = (listName: string) => {
     countEvent('list', listName);
     setTotalCount(0);
+    setDuplicates(0);
     setDisplayResult({});
     setLoadingList(true);
     getList(listName).then((content: string) => {
@@ -61,11 +63,12 @@ export const App = () => {
   const gen = React.useCallback(async (input: string, id2name?: boolean) => {
     countEvent('gen', id2name ? 'id2name' : '');
     setLoading(true);
-    const { map, displayMap, invalids, count } = await generate({ id2name, input, maxRendered });
+    const { map, displayMap, invalids, count, duplicates } = await generate({ id2name, input, maxRendered });
     setDisplayResult(displayMap);
     setInvalidNames(invalids);
     setResult(map);
     setTotalCount(count);
+    setDuplicates(duplicates);
     setIsId2Name(!!id2name);
     setLoading(false);
     return map;
@@ -124,7 +127,7 @@ export const App = () => {
                 <MenuList minW="7rem" fontSize="md" style={{
                   display: "grid",
                   gridAutoFlow: "column",
-                  gridTemplateRows: "repeat(8, auto)"
+                  gridTemplateRows: "repeat(13, auto)"
                 }}>
                   {lists.map(item => (
                     <MenuItem onClick={() => list(item.val)} key={item.val}>{item.name}</MenuItem>
@@ -169,7 +172,7 @@ export const App = () => {
             }
             {totalCount > 0 && <VStack spacing={1} w="full">
               {totalCount > maxRendered && <Text fontSize="md">
-                {totalCount} valid names. First {maxRendered} shown below:
+                {duplicates ? `${duplicates} duplicate${duplicates > 1 ? 's' : ''}. ` : ''}{totalCount} valid names. First {maxRendered} shown below:
               </Text>
               }
               <Box textAlign="left" fontSize="md" maxW={{base: "sm", md: "md", xl: "xl"}} maxH="xl" overflowY="auto" w="full">
