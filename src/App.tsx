@@ -23,13 +23,17 @@ import {
 } from "@chakra-ui/react"
 import theme from "./theme";
 import { ChevronDownIcon } from "@chakra-ui/icons"
+import AceEditor from "react-ace";
+import "ace-builds/src-noconflict/theme-solarized_dark";
 import ReactJson from 'react-json-view'
 import generate from "./helpers/gen-map";
 import { ExportTypes, Invalids, Name2IdMap } from "./helpers/types";
-import { getList, lists } from "./helpers/lists";
+import { getList, ListItem, lists } from "./helpers/lists";
 import { exportMap, exportTypes } from "./helpers/export-map";
 
 const maxRendered = 500;
+const mainListVals = Object.keys(lists);
+const mainListItems: ListItem[] = mainListVals.map((val) => ({name: lists[val].name, val, closeOnSelect: false }));
 
 export const App = () => {
   const [input, setInput] = React.useState('');
@@ -43,12 +47,23 @@ export const App = () => {
   const [loading, setLoading] = React.useState(false);
   const [downloading, setDownloading] = React.useState(false);
   const [loadingList, setLoadingList] = React.useState(false);
+  const [listItems, setListItems] = React.useState<ListItem[]>(mainListItems);
+  const textAreaRef = React.useRef<HTMLTextAreaElement>(null);
   
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
+  const handleChange = (val: string) => {
+    setInput(val);
   };
 
   const list = (listName: string) => {
+    const isMainListItem = mainListVals.includes(listName);
+    if(listName === 'back') {
+      setListItems(mainListItems);
+      return;
+    }
+    if(isMainListItem) {
+      setListItems([{name: '❮ Back', val:'back', closeOnSelect: false} as ListItem].concat(lists[listName].subItems));
+      return;
+    }
     countEvent('list', listName);
     setTotalCount(0);
     setDuplicates(0);
@@ -110,7 +125,9 @@ export const App = () => {
               <Text fontSize="md">
                 List of ENS names separated by <Code>,</Code> <Code>space</Code> or <Code>new line</Code>
               </Text>
-              <Textarea id="input" h="40" maxW={{base: "sm", md: "md", xl: "xl"}} w="full" fontFamily="monospace" value={input} onChange={handleChange}></Textarea>
+              <Box maxW={{base: "sm", md: "md", xl: "xl"}} w="full">
+                <AceEditor theme="solarized_dark" mode="text" wrapEnabled={true} value={input} onChange={handleChange} width="100%" height="260px" setOptions={{wrapMethod: "text", indentedSoftWrap: false, showGutter: false, fontSize: 16, fontFamily: "monospace"}} enableBasicAutocompletion={false} enableLiveAutocompletion={false}/>
+              </Box>
             </VStack>
             <Flex maxW="xs" direction="row" wrap="wrap" justifyContent="center" alignContent="space-between" alignItems="flex-end">
               <ButtonGroup isAttached isDisabled={input.length === 0} colorScheme="teal">
@@ -127,10 +144,10 @@ export const App = () => {
                 <MenuList minW="7rem" fontSize="md" style={{
                   display: "grid",
                   gridAutoFlow: "column",
-                  gridTemplateRows: "repeat(13, auto)"
+                  gridTemplateRows: "repeat(10, auto)"
                 }}>
-                  {lists.map(item => (
-                    <MenuItem onClick={() => list(item.val)} key={item.val}>{item.name}</MenuItem>
+                  {listItems.map(item => (
+                    <MenuItem onClick={() => list(item.val)} key={item.val} closeOnSelect={item.closeOnSelect !== false}>{item.name}<span style={{paddingLeft: '10px', marginLeft: 'auto', display: item.closeOnSelect === false && item.val !== 'back' ? 'block' : 'none'}}>❯</span></MenuItem>
                   ))}
                 </MenuList>
               </Menu>
