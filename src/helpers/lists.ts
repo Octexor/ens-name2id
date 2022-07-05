@@ -50,7 +50,7 @@ export const lists: {[val: string]: ListObj} = {
     },
     '24h': {
         name: '24h Club', subItems: [
-            { name: '24h Club', val: '24h' },
+            { name: '24h Club', val: '24hc' },
             { name: '24h Palindromes', val: '24hp' }
         ]
     },
@@ -287,10 +287,18 @@ export function getList(listName: string): Promise<string> {
                         content += '0x' + pad(i.toString(16), 3) + ' ';
                     }
                     break;
-                case '24h':
+                case '24hc':
                     for (let i = 0; i < 24; i++) {
                         for (let j = 0; j < 60; j++) {
                             content += `${pad(i, 2)}h${pad(j, 2)} `;
+                        }
+                    }
+                    break;
+                case '24hp':
+                    for (let i = 0; i < 24; i++) {
+                        const min = pad(i, 2).split('').reverse().join('');
+                        if(Number(min) < 60) {
+                            content += `${pad(i, 2)}h${pad(i, 2).split('').reverse().join('')} `;
                         }
                     }
                     break;
