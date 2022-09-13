@@ -314,5 +314,5 @@ function pad(i: number | string, digits: number) {
 }
 
 let an = '٠١٢٣٤٥٦٧٨٩';
-let pn = '۰۱۲۳۴۵۶۷۸۹';
+let pn = '٠١٢٣۴۵۶٧٨٩';
 let indic = '०१२३४५६७८९'; // devanagari

@@ -1,5 +1,4 @@
-// import { ens_normalize } from "@adraffy/ens-normalize";
-import getTokenId, { normalize, validate } from "./name2id";
+import getTokenId, { normalize, validate, ens_normalize } from "./name2id";
 import parseInput from "./parse-input";
 import { Invalids, Name2IdMap } from "./types";
 
@@ -22,10 +21,10 @@ const generate = ({ id2name, input, maxRendered }: { id2name?: boolean, input: s
                             chunk.forEach(name => {
                                 let normal: string;
                                 try {
-                                    normal = normalize(name);
-                                    if(!validate(normal)) {
-                                        throw new Error("invalid name!");
-                                    }
+                                    normal = ens_normalize(name);
+                                    // if(!validate(normal)) {
+                                    //     throw new Error("invalid name!");
+                                    // }
                                     if ([...normal].length < 3) {
                                         throw new Error("too short!");
                                     }
