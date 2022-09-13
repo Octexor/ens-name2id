@@ -50,6 +50,8 @@ export const App = () => {
   const [listItems, setListItems] = React.useState<ListItem[]>(mainListItems);
   const textAreaRef = React.useRef<HTMLTextAreaElement>(null);
 
+  const displayCount = Object.keys(displayResult).length;
+
   const handleChange = (val: string) => {
     setInput(val);
   };
@@ -203,9 +205,9 @@ export const App = () => {
             }
             {totalCount > 0 && <VStack spacing={1} w="full">
               <Text fontSize="md">
-                {duplicates ? `${duplicates} duplicate${duplicates > 1 ? 's' : ''}. ` : ''}{totalCount} valid names.{totalCount > maxRendered ? ` First ${maxRendered} shown below:` : ''}
+                {duplicates ? `${duplicates} duplicate${duplicates > 1 ? 's' : ''}. ` : ''}{totalCount} valid names.{(displayCount > 0 && totalCount > maxRendered) ? ` First ${maxRendered} shown below:` : ''}
               </Text>
-              {Object.keys(displayResult).length > 0 && <Box textAlign="left" fontSize="md" maxW={{base: "sm", md: "md", xl: "xl"}} maxH="xl" overflowY="auto" w="full">
+              {displayCount > 0 && <Box textAlign="left" fontSize="md" maxW={{base: "sm", md: "md", xl: "xl"}} maxH="xl" overflowY="auto" w="full">
                 <ReactJson
                   src={displayResult}
                   theme="solarized"
