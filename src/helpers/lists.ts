@@ -20,6 +20,7 @@ export const lists: {[val: string]: ListObj} = {
             { name: '3-Digit Arabic Palindromes', val: '3dap' },
             { name: '4-Digit Arabic Palindromes', val: '4dap' },
             { name: '5-Digit Arabic Palindromes', val: '5dap' },
+            { name: '6-Digit Arabic Palindromes', val: '6dap' },
         ]
     },
     'pd': {
@@ -30,6 +31,7 @@ export const lists: {[val: string]: ListObj} = {
             { name: '3-Digit Persian Palindromes', val: '3dpp' },
             { name: '4-Digit Persian Palindromes', val: '4dpp' },
             { name: '5-Digit Persian Palindromes', val: '5dpp' },
+            { name: '6-Digit Persian Palindromes', val: '6dpp' },
         ]
     },
     'id': {
@@ -170,6 +172,15 @@ export function getList(listName: string): Promise<string> {
                         }
                     }
                     break;
+                case '6dap':
+                    for (let i = 0; i < 10; i++) {
+                        for (let j = 0; j < 10; j++) {
+                            for (let k = 0; k < 10; k++) {
+                                content += `${an[i]}${an[j]}${an[k]}${an[k]}${an[j]}${an[i]} `;
+                            }
+                        }
+                    }
+                    break;
                 case '999p':
                     for (let i = 0; i < 10; i++) {
                         for (let j = 0; j < 10; j++) {
@@ -222,6 +233,15 @@ export function getList(listName: string): Promise<string> {
                         for (let j = 0; j < 10; j++) {
                             for (let k = 0; k < 10; k++) {
                                 content += `${pn[i]}${pn[j]}${pn[k]}${pn[j]}${pn[i]} `;
+                            }
+                        }
+                    }
+                    break;
+                case '6dpp':
+                    for (let i = 0; i < 10; i++) {
+                        for (let j = 0; j < 10; j++) {
+                            for (let k = 0; k < 10; k++) {
+                                content += `${pn[i]}${pn[j]}${pn[k]}${pn[k]}${pn[j]}${pn[i]} `;
                             }
                         }
                     }
