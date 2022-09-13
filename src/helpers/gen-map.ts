@@ -1,8 +1,12 @@
-import getTokenId, { normalize, validate, ens_normalize } from "./name2id";
+import getTokenId, { ens_normalize } from "./name2id";
 import parseInput from "./parse-input";
 import { Invalids, Name2IdMap } from "./types";
 
+interface NormalMap {
+    [index: string]: boolean;
+}
 const chunkSize = 1000;
+
 const generate = ({ id2name, input, maxRendered }: { id2name?: boolean, input: string, maxRendered: number }): Promise<{ map: Name2IdMap, displayMap: Name2IdMap, invalids: Invalids, count: number, duplicates: number }> => {
     return new Promise((resolve) => {
             const map: Name2IdMap = {};
@@ -15,7 +19,7 @@ const generate = ({ id2name, input, maxRendered }: { id2name?: boolean, input: s
             const run = async () => {
                 for (let i = 0; i < names.length; i += chunkSize) {
                     const chunk = names.slice(i, i + chunkSize);
-                    // eslint-disable-next-line
+
                     await new Promise<void>((rs) => {
                         setTimeout(() => {
                             chunk.forEach(name => {
@@ -41,8 +45,8 @@ const generate = ({ id2name, input, maxRendered }: { id2name?: boolean, input: s
                                             duplicates++;
                                         } else {
                                             count++;
+                                            map[normal] = tokenId;
                                         }
-                                        map[normal] = tokenId;
                                     }
                                     
                                     if (count <= maxRendered) {
@@ -68,4 +72,50 @@ const generate = ({ id2name, input, maxRendered }: { id2name?: boolean, input: s
     });
 };
 
-export default generate;
+const normalize = ({ input }: { input: string }): Promise<{ normalInput: string, invalids: Invalids, count: number, duplicates: number }> => {
+    return new Promise((resolve) => {
+        const map: NormalMap = {};
+        let count = 0;
+        let duplicates = 0;
+        const names = parseInput(input);
+        const invalids: Invalids = [];
+        let normalInput = "";
+
+        const run = async () => {
+            for (let i = 0; i < names.length; i += chunkSize) {
+                const chunk = names.slice(i, i + chunkSize);
+
+                await new Promise<void>((rs) => {
+                    setTimeout(() => {
+                        chunk.forEach(name => {
+                            let normal: string;
+                            try {
+                                normal = ens_normalize(name);
+                                if ([...normal].length < 3) {
+                                    throw new Error("too short!");
+                                }
+
+                                if(map[normal]){
+                                    duplicates++;
+                                } else {
+                                    count++;
+                                    map[normal] = true;
+                                }
+
+                            } catch (error: any) {
+                                invalids.push({ name, error });
+                            }
+                        });
+                        rs();
+                    }, 0);
+                })
+            }
+        }
+        run().then(() => {
+            Object.keys(map).forEach(normalName => normalInput += normalName + " ");
+            resolve({ normalInput, invalids, count, duplicates });
+        });
+
+    });
+};
+export {generate, normalize};

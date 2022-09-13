@@ -1,6 +1,6 @@
 import { ens_normalize } from "@adraffy/ens-normalize";
-const normalize = require('@ensdomains/eth-ens-namehash').normalize;
-const validate = require('@ensdomains/ens-validation').validate;
+const oldNormalize = require('@ensdomains/eth-ens-namehash').normalize;
+const oldValidate = require('@ensdomains/ens-validation').validate;
 const ethers = require('ethers');
 const BigNumber = ethers.BigNumber;
 const utils = ethers.utils;
@@ -10,5 +10,5 @@ const getTokenId = (name: string) => {
     return BigNumber.from(labelHash).toString();
 }
 
-export {normalize, validate, ens_normalize};
+export {oldNormalize, oldValidate, ens_normalize};
 export default getTokenId;

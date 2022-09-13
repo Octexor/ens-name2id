@@ -19,14 +19,14 @@ import {
   Stack,
   Alert,
   AlertIcon,
-  Container,
+  Container, AlertDescription, AlertTitle,
 } from "@chakra-ui/react"
 import theme from "./theme";
 import { ChevronDownIcon } from "@chakra-ui/icons"
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/theme-solarized_dark";
 import ReactJson from 'react-json-view'
-import generate from "./helpers/gen-map";
+import { generate, normalize } from "./helpers/gen-map";
 import { ExportTypes, Invalids, Name2IdMap } from "./helpers/types";
 import { getList, ListItem, lists } from "./helpers/lists";
 import { exportMap, exportTypes } from "./helpers/export-map";
@@ -49,7 +49,7 @@ export const App = () => {
   const [loadingList, setLoadingList] = React.useState(false);
   const [listItems, setListItems] = React.useState<ListItem[]>(mainListItems);
   const textAreaRef = React.useRef<HTMLTextAreaElement>(null);
-  
+
   const handleChange = (val: string) => {
     setInput(val);
   };
@@ -87,6 +87,16 @@ export const App = () => {
     setIsId2Name(!!id2name);
     setLoading(false);
     return map;
+  }, []);
+
+  const normalizeHandler = React.useCallback(async (input: string) => {
+    setLoading(true);
+    const { normalInput, invalids, count, duplicates } = await normalize({ input });
+    setInvalidNames(invalids);
+    setTotalCount(count);
+    setDuplicates(duplicates);
+    setInput(normalInput);
+    setLoading(false);
   }, []);
 
   const handleExport = (type: ExportTypes) => {
@@ -136,6 +146,7 @@ export const App = () => {
                   <MenuButton as={Button} paddingInlineStart="0" paddingInlineEnd="2" minW="5" rightIcon={<ChevronDownIcon />} disabled={input.length === 0 || loading}></MenuButton>
                   <MenuList minW="7rem" fontSize="md" bg="teal.200" color="gray.800" _hover={{bg: "teal.300"}}>
                     <MenuItem onClick={() => gen(input, true)} fontWeight="semibold">ID to Name</MenuItem>
+                    <MenuItem onClick={() => normalizeHandler(input)} fontWeight="semibold">Normalize</MenuItem>
                   </MenuList>
                 </Menu>
               </ButtonGroup>
@@ -177,12 +188,15 @@ export const App = () => {
               {invalidNames.slice(0, 5).map(inv => (
                 <Alert status='error' borderRadius="10" py="2" key={inv.name}>
                   <AlertIcon />
-                  Invalid name: "{inv.name}" error: {inv.error.message} 
+                  <VStack alignItems={"start"}>
+                    <AlertTitle>Invalid name: "{inv.name}"</AlertTitle>
+                    <AlertDescription>error: {inv.error.message}</AlertDescription>
+                  </VStack>
                 </Alert>
               ))}
               {invalidNames.length > 5 && <Alert status='error' borderRadius="10" py="2">
                 <AlertIcon />
-                {invalidNames.length - 5} more invalid name{invalidNames.length > 6 ? 's' : ''}!
+                <AlertDescription>{invalidNames.length - 5} more invalid name{invalidNames.length > 6 ? 's' : ''}!</AlertDescription>
               </Alert>
               }
             </Stack>
@@ -191,7 +205,7 @@ export const App = () => {
               <Text fontSize="md">
                 {duplicates ? `${duplicates} duplicate${duplicates > 1 ? 's' : ''}. ` : ''}{totalCount} valid names.{totalCount > maxRendered ? ` First ${maxRendered} shown below:` : ''}
               </Text>
-              <Box textAlign="left" fontSize="md" maxW={{base: "sm", md: "md", xl: "xl"}} maxH="xl" overflowY="auto" w="full">
+              {Object.keys(displayResult).length > 0 && <Box textAlign="left" fontSize="md" maxW={{base: "sm", md: "md", xl: "xl"}} maxH="xl" overflowY="auto" w="full">
                 <ReactJson
                   src={displayResult}
                   theme="solarized"
@@ -205,7 +219,7 @@ export const App = () => {
                     wordBreak: "break-all"
                   }}
                 ></ReactJson>
-              </Box>
+              </Box>}
             </VStack>
             }
           </VStack>
