@@ -112,7 +112,7 @@ const normalize = ({ input }: { input: string }): Promise<{ normalInput: string,
             }
         }
         run().then(() => {
-            Object.keys(map).forEach(normalName => normalInput += normalName + " ");
+            Object.keys(map).sort().forEach(normalName => normalInput += normalName + " ");
             resolve({ normalInput, invalids, count, duplicates });
         });
 
