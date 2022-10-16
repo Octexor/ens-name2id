@@ -19,14 +19,14 @@ import {
   Stack,
   Alert,
   AlertIcon,
-  Container, AlertDescription, AlertTitle,
+  Container, AlertDescription, AlertTitle, Select, Input,
 } from "@chakra-ui/react"
 import theme from "./theme";
 import { ChevronDownIcon } from "@chakra-ui/icons"
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/theme-solarized_dark";
 import ReactJson from 'react-json-view'
-import { generate, normalize } from "./helpers/gen-map";
+import { extend, generate, normalize } from "./helpers/gen-map";
 import { ExportTypes, Invalids, Name2IdMap } from "./helpers/types";
 import { getList, ListItem, lists } from "./helpers/lists";
 import { exportMap, exportTypes } from "./helpers/export-map";
@@ -36,7 +36,7 @@ const mainListVals = Object.keys(lists);
 const mainListItems: ListItem[] = mainListVals.map((val) => ({name: lists[val].name, val, closeOnSelect: false }));
 
 export const App = () => {
-  const [input, setInput] = React.useState('');
+  const [input, setInput] = React.useState("");
   const [result, setResult] = React.useState({} as Name2IdMap);
   const [displayResult, setDisplayResult] = React.useState({} as Name2IdMap);
   const [invalidNames, setInvalidNames] = React.useState([] as Invalids);
@@ -48,6 +48,9 @@ export const App = () => {
   const [downloading, setDownloading] = React.useState(false);
   const [loadingList, setLoadingList] = React.useState(false);
   const [listItems, setListItems] = React.useState<ListItem[]>(mainListItems);
+  const [extension, setExtension] = React.useState("");
+  const [extensionMode, setExtensionMode] = React.useState("prefix");
+  const [extendLoading, setExtendLoading] = React.useState(false);
   const textAreaRef = React.useRef<HTMLTextAreaElement>(null);
 
   const displayCount = Object.keys(displayResult).length;
@@ -120,6 +123,13 @@ export const App = () => {
     });
   }
 
+  const applyExtention = React.useCallback(async (input: string, extension: string, extensionMode: string) => {
+    setExtendLoading(true);
+    const { normalInput, count, duplicates } = await extend({ input, extension, extensionMode });
+    setInput(normalInput);
+    setExtendLoading(false);
+  }, []);
+
   React.useEffect(() => {
     if (refresh) {
       gen(input);
@@ -185,6 +195,15 @@ export const App = () => {
                 </Menu>
               </ButtonGroup>
 
+            </Flex>
+
+            <Flex maxW="xs" direction="row" justifyContent="center" alignContent="space-between" alignItems="flex-end" padding={"0 1rem"}>
+              <Select onChange={val => setExtensionMode(val.target.value)} flex={"3 1"} isDisabled={input.length === 0}>
+                <option value='prefix'>Prefix</option>
+                <option value='suffix'>Suffix</option>
+              </Select>
+              <Input value={extension} onChange={(val) => setExtension(val.target.value)} style={{marginLeft: "0.5rem", flex: "2 1"}} isDisabled={input.length === 0}/>
+              <Button onClick={() => applyExtention(input, extension, extensionMode)} style={{marginLeft: "0.5rem", flex: "2 1"}} isDisabled={input.length === 0} isLoading={extendLoading}>Apply</Button>
             </Flex>
             {invalidNames.length > 0 && <Stack spacing={1} fontSize="md">
               {invalidNames.slice(0, 5).map(inv => (

@@ -1,3 +1,4 @@
+import { NONAME } from "dns";
 import getTokenId, { ens_normalize } from "./name2id";
 import parseInput from "./parse-input";
 import { Invalids, Name2IdMap } from "./types";
@@ -118,4 +119,47 @@ const normalize = ({ input }: { input: string }): Promise<{ normalInput: string,
 
     });
 };
-export {generate, normalize};
+
+const extend = ({ input, extension, extensionMode }: { input: string, extension: string, extensionMode: string }): Promise<{ normalInput: string, count: number, duplicates: number }> => {
+    return new Promise((resolve) => {
+        const map: NormalMap = {};
+        let count = 0;
+        let duplicates = 0;
+        const names = parseInput(input);
+        let normalInput = "";
+
+        const run = async () => {
+            for (let i = 0; i < names.length; i += chunkSize) {
+                const chunk = names.slice(i, i + chunkSize);
+
+                await new Promise<void>((rs) => {
+                    setTimeout(() => {
+                        chunk.forEach(name => {
+                            let extended: string;
+                            if(extensionMode === "prefix") {
+                                extended = extension + name;
+                            } else {
+                                extended = name + extension;
+                            }
+
+                            if(map[extended]){
+                                duplicates++;
+                            } else {
+                                count++;
+                                map[extended] = true;
+                            }
+                        });
+                        rs();
+                    }, 0);
+                })
+            }
+        }
+        run().then(() => {
+            Object.keys(map).sort().forEach(normalName => normalInput += normalName + " ");
+            resolve({ normalInput, count, duplicates });
+        });
+
+    });
+};
+
+export {generate, normalize, extend};
