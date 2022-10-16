@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@adraffy/ens-normalize": "^1.6.3",
+    "@adraffy/ens-normalize": "github:adraffy/ens-normalize.js#d2344cf6",
     "@chakra-ui/icons": "^2.0.9",
     "@chakra-ui/react": "^2.2.9",
     "@emotion/react": "^11.10.4",
