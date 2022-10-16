@@ -174,6 +174,16 @@ export const App = () => {
                   ))}
                 </MenuList>
               </Menu>
+              
+              <Flex maxW="xs" direction="row" justifyContent="center" alignContent="space-between" alignItems="flex-end" padding={"0 1rem"} marginTop={"0.5rem"}>
+                <Select onChange={val => setExtensionMode(val.target.value)} flex={"3 1"} isDisabled={input.length === 0}>
+                  <option value='prefix'>Prefix</option>
+                  <option value='suffix'>Suffix</option>
+                </Select>
+                <Input value={extension} onChange={(val) => setExtension(val.target.value)} style={{marginLeft: "0.5rem", flex: "2 1"}} isDisabled={input.length === 0}/>
+                <Button onClick={() => applyExtention(input, extension, extensionMode)} style={{marginLeft: "0.5rem", flex: "2 1"}} isDisabled={input.length === 0} isLoading={extendLoading}>Apply</Button>
+              </Flex>
+
               <ButtonGroup isAttached isDisabled={input.length === 0}>
                 <Button onClick={clear}>Clear</Button>
                 <Menu>
@@ -197,14 +207,6 @@ export const App = () => {
 
             </Flex>
 
-            <Flex maxW="xs" direction="row" justifyContent="center" alignContent="space-between" alignItems="flex-end" padding={"0 1rem"}>
-              <Select onChange={val => setExtensionMode(val.target.value)} flex={"3 1"} isDisabled={input.length === 0}>
-                <option value='prefix'>Prefix</option>
-                <option value='suffix'>Suffix</option>
-              </Select>
-              <Input value={extension} onChange={(val) => setExtension(val.target.value)} style={{marginLeft: "0.5rem", flex: "2 1"}} isDisabled={input.length === 0}/>
-              <Button onClick={() => applyExtention(input, extension, extensionMode)} style={{marginLeft: "0.5rem", flex: "2 1"}} isDisabled={input.length === 0} isLoading={extendLoading}>Apply</Button>
-            </Flex>
             {invalidNames.length > 0 && <Stack spacing={1} fontSize="md">
               {invalidNames.slice(0, 5).map(inv => (
                 <Alert status='error' borderRadius="10" py="2" key={inv.name}>
