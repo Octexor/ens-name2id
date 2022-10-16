@@ -181,7 +181,7 @@ export const App = () => {
                   <option value='suffix'>Suffix</option>
                 </Select>
                 <Input value={extension} onChange={(val) => setExtension(val.target.value)} style={{marginLeft: "0.5rem", flex: "2 1"}} isDisabled={input.length === 0}/>
-                <Button onClick={() => applyExtention(input, extension, extensionMode)} style={{marginLeft: "0.5rem", flex: "2 1"}} isDisabled={input.length === 0} isLoading={extendLoading}>Apply</Button>
+                <Button onClick={() => applyExtention(input, extension, extensionMode)} style={{marginLeft: "0.5rem", flex: "2 1"}} isDisabled={input.length === 0 || extension.length === 0} isLoading={extendLoading}>Apply</Button>
               </Flex>
 
               <ButtonGroup isAttached isDisabled={input.length === 0}>
