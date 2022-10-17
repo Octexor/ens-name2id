@@ -1,4 +1,3 @@
-import { NONAME } from "dns";
 import getTokenId, { ens_normalize } from "./name2id";
 import parseInput from "./parse-input";
 import { Invalids, Name2IdMap } from "./types";

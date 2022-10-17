@@ -7,7 +7,6 @@ import {
   VStack,
   Code,
   Grid,
-  Textarea,
   Heading,
   Flex,
   Button,
@@ -51,7 +50,6 @@ export const App = () => {
   const [extension, setExtension] = React.useState("");
   const [extensionMode, setExtensionMode] = React.useState("prefix");
   const [extendLoading, setExtendLoading] = React.useState(false);
-  const textAreaRef = React.useRef<HTMLTextAreaElement>(null);
 
   const displayCount = Object.keys(displayResult).length;
 
@@ -125,7 +123,7 @@ export const App = () => {
 
   const applyExtention = React.useCallback(async (input: string, extension: string, extensionMode: string) => {
     setExtendLoading(true);
-    const { normalInput, count, duplicates } = await extend({ input, extension, extensionMode });
+    const { normalInput } = await extend({ input, extension, extensionMode });
     setInput(normalInput);
     setExtendLoading(false);
   }, []);
